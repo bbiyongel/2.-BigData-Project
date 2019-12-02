@@ -1,0 +1,150 @@
+﻿-- 테이블 순서는 관계를 고려하여 한 번에 실행해도 에러가 발생하지 않게 정렬되었습니다.
+
+-- isbn_code Table Create SQL
+CREATE TABLE isbn_code
+(
+    `book_isbn_code`  INT             NOT NULL    COMMENT '도서 분류 코드', 
+    `book_isbn_name`  VARCHAR(255)    NOT NULL    COMMENT '도서 분류 명', 
+    PRIMARY KEY (book_isbn_code)
+);
+
+ALTER TABLE isbn_code COMMENT '도서 코드 분류 테이블';
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE all_book_list
+(
+    `book_name`               VARCHAR(255)    NULL        COMMENT '도서 제목', 
+    `book_author`             LONGTEXT        NULL        COMMENT '도서 저자', 
+    `book_pub`                VARCHAR(255)    NULL        COMMENT '도서 출판사', 
+    `book_pub_year`           VARCHAR(255)    NULL        COMMENT '도서 발행년도', 
+    `book_isbn`               VARCHAR(100)    NOT NULL    COMMENT '도서 고유번호', 
+    `book_isbn_code`          INT             NOT NULL    COMMENT '주제 분류(도서 분류 코드)', 
+    `book_amount`             INT             NULL        COMMENT '해당 도서 권수', 
+    `book_rental`             INT             NULL        COMMENT '도서 총 대여 횟수', 
+    `book_registration_date`  DATE            NULL        COMMENT '도서 등록일자', 
+    PRIMARY KEY (book_isbn)
+);
+
+ALTER TABLE all_book_list COMMENT '국립세종도서관 도서 전체 목록';
+
+ALTER TABLE all_book_list
+    ADD CONSTRAINT FK_all_book_list_book_isbn_code_isbn_code_book_isbn_code FOREIGN KEY (book_isbn_code)
+        REFERENCES isbn_code (book_isbn_code) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE member
+(
+    `user_no`         BIGINT          NOT NULL    COMMENT '회원 번호(자동증가)', 
+    `user_name`       VARCHAR(255)    NOT NULL    COMMENT '회원 이름', 
+    `user_password`   VARCHAR(255)    NOT NULL    COMMENT '회원 비밀번호', 
+    `user_age`        INT             NOT NULL    COMMENT '회원 나이', 
+    `user_sex`        INT             NOT NULL    COMMENT '회원 성별(M=0,F=1)', 
+    `book_isbn_code`  INT             NOT NULL    COMMENT '좋아하는 주제', 
+    PRIMARY KEY (user_no)
+);
+
+ALTER TABLE member COMMENT '회원 정보';
+
+ALTER TABLE member
+    ADD CONSTRAINT FK_member_book_isbn_code_isbn_code_book_isbn_code FOREIGN KEY (book_isbn_code)
+        REFERENCES isbn_code (book_isbn_code) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE rental_history
+(
+    `user_no`           BIGINT          NOT NULL    COMMENT '회원 번호', 
+    `book_isbn`         VARCHAR(255)    NOT NULL    COMMENT '도서 고유번호', 
+    `rating`            BIGINT          NOT NULL    COMMENT '1(빌렸다)', 
+    `book_rental_data`  TEXT            NOT NULL    COMMENT '도서 대여 일자'
+);
+
+ALTER TABLE rental_history COMMENT '이용자 - 대여기록';
+
+ALTER TABLE rental_history
+    ADD CONSTRAINT FK_rental_history_user_no_member_user_no FOREIGN KEY (user_no)
+        REFERENCES member (user_no) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE api_top10
+(
+    `book_rank`         INT             NOT NULL    COMMENT '정보나루 도서 순위', 
+    `book_name`         VARCHAR(255)    NOT NULL    COMMENT '도서 제목', 
+    `book_object_text`  TEXT            NOT NULL    COMMENT '도서 주제', 
+    `book_rental`       BIGINT          NOT NULL    COMMENT '총 대여 횟수', 
+    `book_isbn`         VARCHAR(255)    NOT NULL    COMMENT '도서 고유번호', 
+    `book_isbn_code`    INT             NOT NULL    COMMENT '도서 분류 코드 컬럼(0~10) #10은 미분류', 
+    PRIMARY KEY (book_rank)
+);
+
+ALTER TABLE api_top10 COMMENT '전체 도서 순위(독립 table) * 현재일자 -4주 ~ 현재일자';
+
+ALTER TABLE api_top10
+    ADD CONSTRAINT FK_api_top10_book_isbn_code_isbn_code_book_isbn_code FOREIGN KEY (book_isbn_code)
+        REFERENCES isbn_code (book_isbn_code) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE main_algorithm_list
+(
+    `user_no`    BIGINT          NOT NULL    COMMENT '회원 번호', 
+    `book_isbn`  VARCHAR(255)    NOT NULL    COMMENT '도서 고유번호', 
+    PRIMARY KEY (user_no)
+);
+
+ALTER TABLE main_algorithm_list COMMENT '개인화 추천 도서 리스트 10권';
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE sub_algorithm_list
+(
+    `book_isbn`           VARCHAR(100)    NOT NULL    COMMENT '도서 고유번호', 
+    `book_isbn_relation`  BIGINT          NOT NULL    COMMENT '연관 도서 고유번호', 
+    PRIMARY KEY (book_isbn)
+);
+
+ALTER TABLE sub_algorithm_list COMMENT '함께 읽으면 좋은 도서 5권 (연관 도서)';
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE new_books
+(
+    `book_name`               VARCHAR(255)    NOT NULL    COMMENT '도서 제목', 
+    `book_isbn`               VARCHAR(100)    NOT NULL    COMMENT '도서 고유번호', 
+    `book_registration_date`  DATE            NOT NULL    COMMENT '도서 등록일자'
+);
+
+ALTER TABLE new_books COMMENT '신규 신착 도서';
+
+ALTER TABLE new_books
+    ADD CONSTRAINT FK_new_books_book_isbn_all_book_list_book_isbn FOREIGN KEY (book_isbn)
+        REFERENCES all_book_list (book_isbn) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE user_predict_table
+(
+    `min_Temperature`  FLOAT     NOT NULL    COMMENT '최소 온도', 
+    `rain`             FLOAT     NOT NULL    COMMENT '강수량', 
+    `age_wind_speed`   FLOAT     NOT NULL    COMMENT '평균 풍속', 
+    `month`            INT       NOT NULL    COMMENT '월(1월~12월)', 
+    `closed`           INT       NOT NULL    COMMENT '도서관 개방 여부', 
+    `visitors`         BIGINT    NOT NULL    COMMENT '방문자 수'
+);
+
+ALTER TABLE user_predict_table COMMENT '방문자 수 예측을 위한 정보 테이블';
+
+
+-- isbn_code Table Create SQL
+CREATE TABLE user_predict
+(
+    `date_no`   DATE      NOT NULL    COMMENT '일자', 
+    `visitors`  BIGINT    NOT NULL    COMMENT '예상 방문자 수'
+);
+
+ALTER TABLE user_predict COMMENT '예측된 방문자 수 테이블';
+
+
