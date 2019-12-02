@@ -1,0 +1,6 @@
+제작 : MariaDB
+GUI환경 : HeidSQL
+서버IP : 121.67.246.142
+사용자ID : project
+암호 : **
+port : 3306
